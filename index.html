@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego para Bebés - Colores</title>
+<script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js"></script>
+<style>
+  body{font-family:Arial,sans-serif;text-align:center;background:#FFF8E1;margin:0;padding:10px;overflow:hidden}
+  #pantalla{max-width:500px;margin:0 auto}
+  #dibujoGrande{font-size:130px;background:white;width:220px;height:220px;border-radius:50%;margin:10px auto;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px #ccc;border:8px solid #FFD54F}
+  #dibujoGrande img{width:140px;height:140px}
+  #opciones{display:flex;justify-content:center;gap:20px;margin-top:15px}
+  .opcion{width:150px;height:150px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:90px;cursor:pointer;border:6px solid white;box-shadow:0 6px 15px #aaa;background:white}
+  .opcion img{width:95px;height:95px}
+  .opcion:active{transform:scale(0.92)}
+  #estrellas{font-size:35px;min-height:45px}
+  #estrellas img{width:35px;height:35px}
+  #btn{ background:#4CAF50;color:white;border:none;padding:18px 30px;font-size:28px;border-radius:25px;cursor:pointer;margin-top:10px;box-shadow:0 5px 0 #2E7D32}
+  #btnSonido{ background:#FF9800;color:white;border:none;padding:14px 20px;font-size:22px;border-radius:20px;cursor:pointer;margin-top:10px}
+  #mensaje{font-size:30px;min-height:40px}
+  #mensaje img{width:30px;height:30px;vertical-align:middle}
+  .temblar{animation:temblar 0.4s}
+  @keyframes temblar{0%{transform:translateX(0)}25%{transform:translateX(-10px)}50%{transform:translateX(10px)}75%{transform:translateX(-10px)}100%{transform:translateX(0)}}
+  #confeti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;font-size:40px;display:none}
+</style>
+</head>
+<body>
+<div id="confeti">🎉 🌟 🎉 🌟 🎉</div>
+<div id="pantalla">
+  <div id="estrellas">⭐ ⭐ ⭐</div>
+  <div id="dibujoGrande">👋</div>
+  <div id="mensaje"></div>
+  <div id="opciones"></div>
+  <br>
+  <button id="btn">▶️ JUGAR</button>
+  <br>
+  <button id="btnSonido">🔊 ESCUCHAR OTRA VEZ</button>
+</div>
+
+<script>
+const items = [
+  {color:"rojo", codigo:"#FFCDD2", emoji:"🍎", nombreVoz:"manzana roja", frase:"Toca la manzana roja"},
+  {color:"amarillo", codigo:"#FFF9C4", emoji:"🍌", nombreVoz:"banana amarilla", frase:"Toca la banana amarilla"},
+  {color:"azul", codigo:"#BBDEFB", emoji:"🐬", nombreVoz:"delfín azul", frase:"Toca el delfín azul"},
+  {color:"verde", codigo:"#C8E6C9", emoji:"🐸", nombreVoz:"rana verde", frase:"Toca la rana verde"},
+  {color:"naranja", codigo:"#FFE0B2", emoji:"🍊", nombreVoz:"naranja anaranjada", frase:"Toca la naranja anaranjada"},
+  {color:"morado", codigo:"#E1BEE7", emoji:"🍇", nombreVoz:"uva morada", frase:"Toca la uva morada"},
+  {color:"rosado", codigo:"#F8BBD0", emoji:"🌸", nombreVoz:"flor rosada", frase:"Toca la flor rosada"},
+  {color:"negro", codigo:"#E0E0E0", emoji:"🐧", nombreVoz:"pingüino negro", frase:"Toca el pingüino negro"}
+];
+
+let lista = [];
+let actual = 0;
+let estrellas = 0;
+let correctaActual = null;
+
+function hablar(texto){
+  window.speechSynthesis.cancel();
+  let voz = new SpeechSynthesisUtterance(texto);
+  voz.lang = "es-ES";
+  voz.rate = 0.85;
+  voz.pitch = 1.2;
+  window.speechSynthesis.speak(voz);
+}
+function dibujar(){ if(window.twemoji) twemoji.parse(document.body); }
+function mezclar(arr){
+  let a=[...arr];
+  for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1)); let t=a[i];a[i]=a[j];a[j]=t;}
+  return a;
+}
+
+document.getElementById("btn").addEventListener("click", function(){
+  lista = mezclar(items).slice(0,8);
+  actual = 0; estrellas = 0;
+  document.getElementById("estrellas").innerHTML = "⭐ ⭐ ⭐";
+  document.getElementById("btn").textContent = "🔄 OTRA VEZ";
+  mostrar();
+});
+
+document.getElementById("btnSonido").addEventListener("click", function(){
+  if(correctaActual) hablar(correctaActual.frase);
+});
+
+function mostrar(){
+  if(actual >= lista.length){
+    document.getElementById("dibujoGrande").innerHTML = "🏆";
+    document.getElementById("opciones").innerHTML = "";
+    document.getElementById("mensaje").innerHTML = "🎉 ¡LO HICISTE! 🎉";
+    hablar("Felicidades, lo hiciste muy bien. Eres una estrella");
+    dibujar();
+    return;
+  }
+  correctaActual = lista[actual];
+  // Solo 2 opciones para bebés, más fácil
+  let otro = mezclar(items.filter(c=>c.color !== correctaActual.color))[0];
+  let opciones = mezclar([correctaActual, otro]);
+
+  document.getElementById("dibujoGrande").innerHTML = correctaActual.emoji;
+  document.getElementById("dibujoGrande").style.background = correctaActual.codigo;
+  document.getElementById("mensaje").innerHTML = "";
+  hablar(correctaActual.frase);
+  dibujar();
+
+  let cont = document.getElementById("opciones");
+  cont.innerHTML = "";
+  opciones.forEach(function(op){
+    let div = document.createElement("div");
+    div.className = "opcion";
+    div.style.background = op.codigo;
+    div.innerHTML = op.emoji;
+    div.addEventListener("click", function(){
+      if(op.color === correctaActual.color){
+        estrellas++;
+        document.getElementById("mensaje").innerHTML = "✅ 🎉";
+        document.getElementById("estrellas").innerHTML = "⭐".repeat(estrellas) + " ⭐ ⭐";
+        hablar("Muy bien, esa es la " + correctaActual.nombreVoz);
+        let c = document.getElementById("confeti");
+        c.style.display = "block";
+        setTimeout(()=>{c.style.display="none"; actual++; mostrar();}, 1200);
+      } else {
+        div.classList.add("temblar");
+        document.getElementById("mensaje").innerHTML = "👀 Busca otra vez";
+        hablar("Ese no, busca la " + correctaActual.nombreVoz);
+        setTimeout(()=>div.classList.remove("temblar"), 500);
+      }
+      dibujar();
+    });
+    cont.appendChild(div);
+  });
+  dibujar();
+}
+dibujar();
+</script>
+</body>
+</html>
